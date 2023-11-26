@@ -31,7 +31,7 @@ const Register = () => {
   const toggleShowCfPassword = () => {
     setCfpass(!cfPass);
   };
-  const handleLogin = async () => {
+  const handleReg = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(regData.email)) {
         Alert.alert("Invalid Email", "Please enter a valid email address");
@@ -135,10 +135,7 @@ const Register = () => {
       ) : (
         <>
           <Button mode="contained" onPress={()=>{
-            handleLogin()
-            // setTimeout(()=>{
-            //   nav.navigate("login")
-            // },3000)
+            handleReg()
           }}>
             Register
           </Button>

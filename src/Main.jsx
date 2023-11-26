@@ -32,11 +32,11 @@ const MainApp = () => {
               name="reg"
               component={Register}
             />
-            {/* <Stack.Screen
+            <Stack.Screen
               options={{ headerShown: false }}
               name="ChangePassword"
               component={ChangePasswordScreen}
-            /> */}
+            />
           </Stack.Group>
         ) : (
           <Stack.Group>

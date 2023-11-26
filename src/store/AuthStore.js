@@ -47,36 +47,6 @@ class AuthStore {
     this.setUser({});
   };
 
-  // logout1 = async (deleteCookies) => {
-  //   if (deleteCookies) {
-  //     await AsyncStorage.removeItem("auth_info");
-  //   }
-  //   // Hiển thị cảnh báo trước khi đăng xuất
-  //   Alert.alert(
-  //     "Cảnh báo",
-  //     "Bạn có chắc muốn đăng xuất?",
-  //     [
-  //       {
-  //         text: "Hủy",
-  //         style: "cancel",
-  //       },
-  //       {
-  //         text: "Đăng xuất",
-  //         onPress: () => {
-  //           this.performLogout();
-  //         },
-  //       },
-  //     ],
-  //     { cancelable: false }
-  //   );
-  // };
-
-  // performLogout = () => {
-  //   this.setLogged(false);
-  //   this.setUser({});
-  //   // Thực hiện các thao tác đăng xuất sau khi người dùng xác nhận
-  // };
-
   register = async ({ email, password, classes, name, msv }) => {
     try {
       if (!this.draft.logging) {
@@ -116,7 +86,33 @@ class AuthStore {
       Alert.alert("Serve Error", "Something error please retry later");
     }
   };
+  // changePassword = async ({ email, password, newPassword }) => {
+  //   try {
+  //     if (!this.draft.logging) {
+  //       this.setLogging(true);
+  //       setTimeout(async () => {
+  //         const doc = await getDocs(
+  //           query(collection(this.DB, "users"), where("email", "==", email))
+  //         );
+  //         if (doc.docs.length > 0) {
+  //           Alert.alert("Error", "Email has been taken");
+  //           this.setLogging(false);
+  //           return;
+  //         }
 
+  //         addDoc(collection(this.DB, "users"), {
+  //           email,
+  //           password,
+  //           newPassword,
+  //         });
+  //         Alert.alert("Success", "Register success");
+  //         this.setLogging(false);
+  //       }, 1000);
+  //     }
+  //   } catch (e) {
+  //     Alert.alert("Serve Error", "Something error please retry later");
+  //   }
+  // };
   login = async ({ email, password }) => {
     try {
       console.log(email, password);
@@ -149,39 +145,55 @@ class AuthStore {
 
   changePassword = async ({ email, oldPassword, newPassword }) => {
     try {
-      const q = query(
-        collection(this.DB, "users"),
-        where("email", "==", email),
-        where("password", "==", oldPassword)
-      );
-      const queryResult = await getDocs(q);
-      if (queryResult.size > 0) {
-        queryResult.forEach(async (us) => {
-          // Assuming only one user matches the email and old password
-          const userRef = doc(this.DB, "users", us.id);
-          
-          // Update password in Firestore
-          await updateDoc(userRef, { password: newPassword });
+      if (!this.draft.logging) {
+        this.setLogging(true);
+        setTimeout(async () => {
+          const q = query(
+            collection(this.DB, "users"),
+            where("email", "==", email),
+            where("password", "==", oldPassword)
+          );
+          const queryResult = await getDocs(q);
+          if (queryResult.size > 0) {
+            queryResult.forEach(async (us) => {
+              // Assuming only one user matches the email and old password
+              const userRef = doc(this.DB, "users", us.id);
   
-          // You might want to update the local user object if needed
-          const updatedUser = { ...us.data(), password: newPassword };
-          this.setUser(updatedUser);
+              // Update password in Firestore
+              await updateDoc(userRef, { password: newPassword });
   
-          // Optionally, you can also update the AsyncStorage with new auth info
-          await AsyncStorage.setItem("auth_info", JSON.stringify(updatedUser));
+              // You might want to update the local user object if needed
+              const updatedUser = { ...us.data(), password: newPassword };
+              this.setUser(updatedUser);
   
-          // Inform the user about the successful password change
-          Alert.alert("Password Changed", "Your password has been updated successfully");
-        });
-      } else {
-        // Alert if the email or old password is incorrect
-        Alert.alert("Change Password Error", "Email or old password incorrect");
+              // Optionally, you can also update the AsyncStorage with new auth info
+              await AsyncStorage.setItem("auth_info", JSON.stringify(updatedUser));
+  
+              // Inform the user about the successful password change
+              Alert.alert(
+                "Password Changed",
+                "Your password has been updated successfully"
+              );
+            });
+          } else {
+            // Alert if the email or old password is incorrect
+            Alert.alert(
+              "Change Password Error",
+              "Email or old password incorrect"
+            );
+          }
+          this.setLogging(false);
+        }, 100);
       }
     } catch (e) {
       // Handle any server or unexpected errors
-      Alert.alert("Server Error", "Something went wrong. Please try again later");
+      Alert.alert(
+        "Server Error",
+        "Something went wrong. Please try again later"
+      );
     }
   };
+  
   createObjectWithDefinedProperties(properties) {
     return Object.fromEntries(
       Object.entries(properties).filter(([_, value]) => value !== undefined)

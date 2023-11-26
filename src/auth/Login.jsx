@@ -76,13 +76,13 @@ const Login = () => {
           >
             <Text>Register</Text>
           </TouchableOpacity>
-          {/* <TouchableOpacity
+          <TouchableOpacity
             onPress={() => {
               nav.navigate("ChangePassword"); // Điều hướng đến màn hình đổi mật khẩu khi người dùng nhấn vào
             }}
           >
             <Text>Change Password</Text>
-          </TouchableOpacity> */}
+          </TouchableOpacity>
         </>
       )}
     </VStack>
