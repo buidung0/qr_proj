@@ -1,16 +1,15 @@
-const { addDoc, collection } = require("firebase/firestore");
-const { initializeApp } = require("firebase/app");
-const { getFirestore } = require("firebase/firestore");
-const { getStorage } = require("firebase/storage");
+const { addDoc, collection } = require('firebase/firestore');
+const { initializeApp } = require('firebase/app');
+const { getFirestore } = require('firebase/firestore');
+const { getStorage } = require('firebase/storage');
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBgdiKRihgsaeCUFyqCpuBkmoepNi6reNU",
-  authDomain: "khanh-dev-portfolio.firebaseapp.com",
-  projectId: "khanh-dev-portfolio",
-  storageBucket: "khanh-dev-portfolio.appspot.com",
-  messagingSenderId: "172968607054",
-  appId: "1:172968607054:web:60a1a552a6f3b536af721f",
-  measurementId: "G-Z83STJ60GR",
+  apiKey: 'AIzaSyCo2k_SyjOSOpxaaiWlCJvEn0CIEl23JCk',
+  authDomain: 'qr-atentdance.firebaseapp.com',
+  projectId: 'qr-atentdance',
+  storageBucket: 'qr-atentdance.appspot.com',
+  messagingSenderId: '285780628611',
+  appId: '1:285780628611:web:51200a989bc0fd535fb7b6',
 };
 
 // Initialize Firebase
@@ -19,15 +18,15 @@ const fireStore = getFirestore(app);
 const storage = getStorage(app);
 
 const data = [
-  { name: "users", child: [] },
+  { name: 'users', child: [] },
   {
-    name: "schedules",
+    name: 'schedules',
     child: [
       {
         checked_at: new Date(),
-        teacher_id: "uzVU0xuzqEVa6zeEeuyf",
-        user: { name: "dang duy khanh" },
-        classes: { name: "K34DL" },
+        teacher_id: 'uzVU0xuzqEVa6zeEeuyf',
+        user: { name: 'bui cong dung' },
+        classes: { name: 'K34DL' },
       },
       // {
       //   checked_at: new Date(),
