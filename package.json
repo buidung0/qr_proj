@@ -19,6 +19,7 @@
     "expo-dev-client": "~2.4.12",
     "expo-file-system": "~15.4.4",
     "expo-image-picker": "~14.3.2",
+    "expo-location": "~16.1.0",
     "expo-media-library": "~15.4.1",
     "expo-sharing": "~11.5.0",
     "expo-splash-screen": "~0.20.5",
@@ -38,10 +39,12 @@
     "react-native-tab-view": "^3.5.2",
     "react-native-toast-message": "^2.1.7",
     "react-native-vector-icons": "^10.0.2",
+    "react-native-virtualized-view": "^1.0.0",
     "react-native-web": "^0.19.9"
   },
   "devDependencies": {
-    "@babel/core": "^7.23.3"
+    "@babel/core": "^7.23.3",
+    "prettier": "3.1.1"
   },
   "private": true
 }
