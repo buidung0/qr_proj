@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react';
-import { Alert, ScrollView, Text, TouchableOpacity, View, Dimensions } from 'react-native';
+import { Alert, Text, TouchableOpacity, View, Dimensions } from 'react-native';
 import { useLayoutEffect, useRef, useState, useEffect } from 'react';
 import scheduleStore from '../store/ScheduleStore';
 import { Button, Icon, MD3Colors } from 'react-native-paper';
@@ -12,13 +12,15 @@ import RNPickerSelect from 'react-native-picker-select';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import React from 'react';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
-import { List } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import * as Sharing from 'expo-sharing';
 import { ROLES } from '../enum/role';
 import * as Location from 'expo-location';
 
 const QRScreen = (props) => {
+  useLayoutEffect(() => {
+    scheduleStore.getClasses();
+    scheduleStore.getSubject();
+  }, []);
   useLayoutEffect(() => {}, [scheduleStore.classes]);
   useLayoutEffect(() => {}, [scheduleStore.subject]);
   const qrRef = useRef();
@@ -41,11 +43,10 @@ const QRScreen = (props) => {
         return;
       }
       let location = await Location.getCurrentPositionAsync({});
-      // console.log(location.coords.latitude, location.coords.longitude);
       // Sử dụng latitude và longitude để làm việc với vị trí
       return location.coords; // Trả về vị trí để sử dụng trong hàm gọi
     } catch (error) {
-      console.error(error);
+      console.log(error);
       return null;
     }
   };
@@ -68,7 +69,43 @@ const QRScreen = (props) => {
   };
 
   const SC_W = Dimensions.get('window').width;
+  // const handleGenerateCode = async () => {
+  //   // console.log('dadwqafasf');
+  //   const userLocation = await generateData(); // Gọi hàm để lấy vị trí
+  //   if (!userLocation) {
+  //     Alert.alert('Error', "Can't get your location, please try again");
+  //     return;
+  //   }
+  //   if (parseInt(timeEnd) <= parseInt(timeStart)) {
+  //     Alert.alert('Error', 'Time InValid');
+  //     return;
+  //   }
+  //   if (timeEnd - timeStart < 10 * 60 * 1000) {
+  //     Alert.alert('Error', 'Time end must more than time start 10 minutes');
+  //     return;
+  //   }
+  //   if (Object.keys(classes).length <= 0) {
+  //     Alert.alert('Error', 'Select class');
+  //     return;
+  //   }
+  //   if (Object.keys(subject).length <= 0) {
+  //     Alert.alert('Error', 'Select subject');
+  //     return;
+  //   }
+  //   const data = {
+  //     lat: userLocation.latitude,
+  //     lon: userLocation.longitude,
+  //     start: timeStart,
+  //     end: timeEnd,
+  //     teacherId: authStore.user.id,
+  //     subject: subject,
+  //     classes: classes,
+  //   };
+  //   console.log('qrgendata:' + JSON.stringify(data));
+  //   setValue(JSON.stringify(data));
+  // };
   const handleGenerateCode = async () => {
+    // console.log('' + data);
     const userLocation = await generateData(); // Gọi hàm để lấy vị trí
     if (!userLocation) {
       Alert.alert('Error', "Can't get your location, please try again");
@@ -102,7 +139,6 @@ const QRScreen = (props) => {
     console.log('qrgendata:' + JSON.stringify(data));
     setValue(JSON.stringify(data));
   };
-
   const handleSaveQrToDisk = () => {
     if (!permissionResponse.granted) {
       requestPermission();

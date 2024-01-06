@@ -1,11 +1,10 @@
-import { observer } from "mobx-react";
-import authStore from "../store/AuthStore";
-import { useLayoutEffect, useState } from "react";
-import { Image, Text, View } from "react-native";
-import React from "react";
-import { TouchableOpacity } from "react-native";
-import { Toast } from "react-native-toast-message/lib/src/Toast";
-import { useNavigation } from "@react-navigation/native";
+import { observer } from 'mobx-react';
+import authStore from '../store/AuthStore';
+import { useLayoutEffect, useState } from 'react';
+import { Image, Text, View } from 'react-native';
+import React from 'react';
+import { TouchableOpacity } from 'react-native';
+import { Toast } from 'react-native-toast-message/lib/src/Toast';
 const Profile = ({ route, navigation }) => {
   const { name } = route.params;
   const [user, setUser] = useState({});
@@ -15,7 +14,7 @@ const Profile = ({ route, navigation }) => {
       if (rs) {
         setUser(rs);
       } else {
-        Toast.show({ type: "error", text1: "No student found" });
+        Toast.show({ type: 'error', text1: 'No student found' });
         navigation.goBack();
       }
     };
@@ -24,11 +23,11 @@ const Profile = ({ route, navigation }) => {
   return (
     <View
       style={{
-        width: "100%",
+        width: '100%',
         flex: 1,
         paddingVertical: 40,
-        justifyContent: "start",
-        alignItems: "center",
+        justifyContent: 'start',
+        alignItems: 'center',
       }}
     >
       <TouchableOpacity>
@@ -38,55 +37,53 @@ const Profile = ({ route, navigation }) => {
             width: 120,
             height: 120,
             borderRadius: 100,
-            backgroundColor: "rgba(0,0,0,0.2)",
+            backgroundColor: 'rgba(0,0,0,0.2)',
           }}
         />
       </TouchableOpacity>
       <Text
         style={{
-          textAlign: "center",
+          textAlign: 'center',
           fontSize: 26,
           fontWeight: 400,
           marginTop: 10,
         }}
       >
-        {"Name: "+user?.name}
+        {'Name: ' + user?.name}
       </Text>
       <Text
         style={{
-          textAlign: "center",
-          fontSize: 15,
-          fontStyle: "italic",
-          color: "gray",
+          textAlign: 'center',
+          fontSize: 18,
+          color: '#2c2c2c',
           fontWeight: 600,
           marginVertical: 3,
         }}
       >
-        {"Email: "+user?.email}
+        {'Email: ' + user?.email}
       </Text>
       <Text
         style={{
-          textAlign: "center",
+          textAlign: 'center',
           fontSize: 20,
-          color: "#2c2c2c",
+          color: '#2c2c2c',
           fontWeight: 600,
           marginVertical: 3,
         }}
       >
-        {"Student ID: "+user?.msv}
+        {'Student ID: ' + user?.msv}
       </Text>
       <Text
         style={{
-          textAlign: "center",
+          textAlign: 'center',
           fontSize: 20,
-          color: "#2c2c2c",
+          color: '#2c2c2c',
           fontWeight: 600,
           marginVertical: 3,
         }}
       >
-        {"Class: "+user?.classes?.name}
+        {'Class: ' + user?.classes?.name}
       </Text>
-      
     </View>
   );
 };

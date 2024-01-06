@@ -1,20 +1,24 @@
 import { observer } from 'mobx-react';
 import React, { useEffect, useState, useLayoutEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Button } from 'react-native';
 import { ScrollView } from 'react-native-virtualized-view';
-import { List, IconButton, Colors } from 'react-native-paper';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import * as MediaLibrary from 'expo-media-library';
+import { List } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import { ROLES } from '../enum/role';
 import scheduleStore from '../store/ScheduleStore';
 import IonIcon from 'react-native-vector-icons/Ionicons';
+import authStore from '../store/AuthStore';
 
 const ListSchedules = (props) => {
+  const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
+  const [hovered, setHovered] = useState(false);
   const nav = useNavigation();
   useEffect(() => {
     scheduleStore.listenSc();
   }, []);
-  // useEffect(()=>{},scheduleStore.listenSc)
-
+  // console.log(scheduleStore.sc)
   const data = scheduleStore.sc;
   const [attendancesByDate, setAttendancesByDate] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
@@ -32,6 +36,48 @@ const ListSchedules = (props) => {
     });
     setAttendancesByDate(groupedByDate);
   }, [data]);
+
+  const handleExportFile = async () => {
+    if (!permissionResponse.granted) {
+      requestPermission();
+      return;
+    }
+
+    const csvHeaders = 'STT,Student Name,Student ID,Day Check In,Time Check In,Class,Subject,Teacher Name\n';
+    let csvContent = csvHeaders;
+
+    try {
+      let stt = 1;
+      data.forEach((student) => {
+        const checkedAt = new Date(student.checked_at);
+        const day = checkedAt.toLocaleDateString('vi-VN');
+        const time = checkedAt.toLocaleTimeString('vi-VN');
+
+        csvContent += `${stt},${student.name},${student.ID},${day},${time},${student.class},${student.subject},${authStore.user.name}\n`;
+        stt++;
+      });
+
+      const fileUri = FileSystem.documentDirectory + 'List Attentdance_' + new Date().getTime() + '.xlsx';
+      console.log(fileUri);
+      await FileSystem.writeAsStringAsync(fileUri, csvContent, {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (isAvailable) {
+        await Sharing.shareAsync(fileUri);
+      }
+    } catch (error) {
+      console.error('Error saving or sharing file:', error);
+    }
+  };
+  const handleExportButtonHover = () => {
+    setHovered(true);
+  };
+
+  const handleExportButtonUnhover = () => {
+    setHovered(false);
+  };
 
   const renderItem = ({ item }) => {
     const checkedAt = new Date(item.checked_at);
@@ -53,20 +99,37 @@ const ListSchedules = (props) => {
   };
 
   return (
-    <ScrollView>
-      <View style={styles.container}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 30 }}>
-          <TouchableOpacity
-            onPress={() => {
-              nav.goBack();
-            }}
-            activeOpacity={0.7}
-            style={{ paddingLeft: 5, paddingRight: 15, marginLeft: 5 }}
-          >
-            <IonIcon name="arrow-back" size={30} />
-          </TouchableOpacity>
-          <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 0 }}>List Attendance by Date</Text>
-        </View>
+    <View style={styles.container}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 30 }}>
+        <TouchableOpacity
+          onPress={() => {
+            nav.goBack();
+          }}
+          activeOpacity={0.7}
+          style={{ paddingLeft: 5, paddingRight: 15, marginLeft: 5 }}
+        >
+          <IonIcon name="arrow-back" size={30} />
+        </TouchableOpacity>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 0 }}>List Attendance by Date</Text>
+      </View>
+
+      <View style={{ alignItems: 'center', marginTop: 10, marginBottom: 10 }}>
+        <TouchableOpacity
+          onPress={handleExportFile}
+          onMouseEnter={handleExportButtonHover} // Sự kiện hover vào
+          onMouseLeave={handleExportButtonUnhover} // Sự kiện hover ra mode="contained" title="Export File"
+          style={[
+            styles.exportButton,
+            {
+              backgroundColor: hovered ? '#6b6b8e' : '#9494b8', // Màu sắc khi hover và khi không hover
+            },
+          ]}
+        >
+          <Text style={styles.exportButtonText}>Export File</Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView>
         <FlatList
           data={Object.keys(attendancesByDate)}
           renderItem={({ item }) => (
@@ -85,8 +148,8 @@ const ListSchedules = (props) => {
           )}
           keyExtractor={(item) => item}
         />
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -99,10 +162,10 @@ const styles = StyleSheet.create({
   dateContainer: {
     marginVertical: 5,
     backgroundColor: '#f0f0f0',
-    borderRadius: 5,
+    borderRadius: 7,
   },
   itemContainer: {
-    marginVertical: 5,
+    marginVertical: 2,
     padding: 10,
     backgroundColor: '#f5f5f5',
     borderRadius: 5,
@@ -113,6 +176,19 @@ const styles = StyleSheet.create({
   boldText: {
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  exportButton: {
+    width: '50%',
+    borderRadius: 8,
+    backgroundColor: '#9494b8', // Màu sắc của nút
+    elevation: 3, // Hiệu ứng shadow
+    alignItems: 'center', // Căn giữa theo chiều ngang
+    paddingVertical: 8, // Khoảng cách dọc của nút
+  },
+  exportButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111111', // Màu chữ của nút
   },
 });
 

@@ -1,42 +1,12 @@
 import { observer } from 'mobx-react';
-import authStore from '../store/AuthStore';
 import { useEffect, useLayoutEffect, useState } from 'react';
-import {
-  Image,
-  ScrollView,
-  Text,
-  View,
-  StyleSheet,
-  Modal,
-  Dimensions,
-  FlatList,
-  Keyboard,
-  Pressable,
-} from 'react-native';
-import IonIcon from 'react-native-vector-icons/Ionicons';
-import { TabView, TabBar, SceneMap } from 'react-native-tab-view';
+import { Text, View, StyleSheet, Pressable } from 'react-native';
 import React from 'react';
 import { Button, TextInput } from 'react-native-paper';
-import RNPickerSelect from 'react-native-picker-select';
-import scheduleStore from '../store/ScheduleStore';
-import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
 import { fireStore } from '../../firebase.config';
-import {
-  addDoc,
-  collection,
-  doc,
-  getDocs,
-  onSnapshot,
-  query,
-  where,
-  updateDoc,
-  deleteDoc,
-  QuerySnapshot,
-  orderBy,
-} from 'firebase/firestore';
+import { collection, doc, getDocs, updateDoc } from 'firebase/firestore';
 
 const DetailClassScreen = ({ route }) => {
   const nav = useNavigation();
@@ -52,28 +22,58 @@ const DetailClassScreen = ({ route }) => {
   };
 
   const buttonColor = isPressed ? '#0D6EFD' : '#1881FF';
-  const updateTodo = () => {
-    if (textHeading && textHeading.length > 0) {
-      const todoDoc = doc(todoRef, route.params.item.id);
-      updateDoc(todoDoc, { name: textHeading })
-        .then(() => {
-          nav.goBack(); // Navigate back to the previous screen
-          console.log('Updated todo:', route.params.item.id);
-        })
-        .catch((err) => {
-          alert('Error updating todo: ' + err.message);
-        });
+  // const updateTodo = () => {
+  //   if (textHeading && textHeading.length > 0) {
+  //     const todoDoc = doc(todoRef, route.params.item.id);
+  //     updateDoc(todoDoc, { name: textHeading })
+  //       .then(() => {
+  //         nav.goBack(); // Navigate back to the previous screen
+  //         console.log('Updated todo:', route.params.item.id);
+  //       })
+  //       .catch((err) => {
+  //         alert('Error updating todo: ' + err.message);
+  //       });
+  //   }
+  // };
+  const updateTodo = async () => {
+    try {
+      if (textHeading && textHeading.length > 0) {
+        const newName = textHeading.trim().toLowerCase(); // Normalize input for comparison
+
+        // Fetch existing classes to check for duplicates
+        const querySnapshot = await getDocs(todoRef);
+        const existingClasses = querySnapshot.docs.map((doc) => doc.data().name.trim().toLowerCase());
+
+        const isDuplicate = existingClasses.includes(newName);
+
+        if (isDuplicate) {
+          alert('This class name already exists!');
+          return;
+        }
+
+        const todoDoc = doc(todoRef, route.params.item.id);
+        await updateDoc(todoDoc, { name: textHeading });
+        nav.goBack(); // Navigate back to the previous screen
+        console.log('Updated todo:', route.params.item.id);
+      }
+    } catch (error) {
+      alert('Error updating todo: ' + error.message);
     }
   };
 
   return (
     <View style={styles.container}>
       <TextInput style={styles.textField} onChangeText={setTextHeading} value={textHeading} placeholder="Update todo" />
-      <Pressable style={styles.buttonUpdate} onPress={updateTodo} onPressIn={handlePressIn} onPressOut={handlePressOut}>
-        <Text>update class</Text>
+      <Pressable
+        style={({ pressed }) => [styles.buttonUpdate, { opacity: pressed ? 0.5 : 1 }]}
+        onPress={updateTodo}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+      >
+        <Text>Update Class</Text>
       </Pressable>
       <TouchableOpacity onPress={() => nav.goBack()}>
-        <Text style={styles.returnText}>return</Text>
+        <Text style={styles.returnText}>Return</Text>
       </TouchableOpacity>
     </View>
   );
@@ -83,33 +83,28 @@ export default observer(DetailClassScreen);
 
 const styles = StyleSheet.create({
   container: {
-    marginTop: 80,
-    marginLeft: 15,
-    marginRight: 15,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
   },
   textField: {
-    marginBottom: 10,
-    padding: 10,
-    fontSize: 15,
-    color: '#000000',
-    backgroundColor: '#e0e0e0',
-    borderRadius: 5,
+    height: 40,
+    width: '80%',
+    borderColor: 'gray',
+    borderWidth: 1,
+    marginBottom: 20,
+    paddingHorizontal: 10,
   },
   buttonUpdate: {
-    marginTop: 25,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    elevation: 10,
-    borderRadius: 10,
-    backgroundColor: '#0D6EFD',
+    backgroundColor: '#1a53ff',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginBottom: 20,
   },
   returnText: {
-    color: '#FC0000',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 8,
-    left: 150,
+    color: 'blue',
+    textDecorationLine: 'underline',
   },
 });

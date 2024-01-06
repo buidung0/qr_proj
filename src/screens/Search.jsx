@@ -1,19 +1,8 @@
 import { observer } from 'mobx-react';
-import {
-  Alert,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-  Dimensions,
-  TextInput,
-  FlatList,
-  StyleSheet,
-} from 'react-native';
-import { useLayoutEffect, useRef, useState, useEffect } from 'react';
+import { Alert, ScrollView, Text, TouchableOpacity, View, FlatList, StyleSheet } from 'react-native';
+import { useLayoutEffect, useState } from 'react';
 import scheduleStore from '../store/ScheduleStore';
-import { Button, Icon, MD3Colors } from 'react-native-paper';
-import QRCode from 'react-native-qrcode-svg';
+import { Icon } from 'react-native-paper';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -21,22 +10,26 @@ import authStore from '../store/AuthStore';
 import RNPickerSelect from 'react-native-picker-select';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import React from 'react';
-import { Toast } from 'react-native-toast-message/lib/src/Toast';
-import { List } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import * as Sharing from 'expo-sharing';
-import { ROLES } from '../enum/role';
-import * as Location from 'expo-location';
 
 const Search = (props) => {
   const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
   const [selectedClass, setSelectedClass] = useState(null);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [filteredStudents, setFilteredStudents] = useState([]);
-  const [startDate, setStartDate] = useState(new Date().getTime()); // Sử dụng timestamp thay vì đối tượng Date
   const [endDate, setEndDate] = useState(new Date().getTime());
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const sevenDaysAgo = new Date(endDate - 7 * 24 * 60 * 60 * 1000);
+  const [startDate, setStartDate] = useState(sevenDaysAgo.getTime());
+
+  useLayoutEffect(() => {
+    scheduleStore.getSchedules();
+  }, []);
+  useLayoutEffect(() => {}, [scheduleStore.sce]);
+  const nav = useNavigation();
+  // console.log(JSON.stringify(scheduleStore.sce));
 
   const convertDateToTimestamp = (date) => {
     // Chuyển đổi ngày tháng năm từ DateTimePicker thành timestamp
@@ -68,34 +61,46 @@ const Search = (props) => {
     setShowEndDatePicker(true);
   };
 
-  useLayoutEffect(() => {
-    scheduleStore.getSchedules();
-  }, []);
-  useLayoutEffect(() => {}, [scheduleStore.sce]);
-  // useEffect(() => {
-  //   setStartDate(new Date());
-  //   setEndDate(new Date());
-  // }, []);
-  const nav = useNavigation();
-  // console.log(JSON.stringify(scheduleStore.sce));
-
   const handleSaveToFile = async () => {
     if (!permissionResponse.granted) {
       requestPermission();
       return;
     }
-    console.log('filter::' + filteredStudents);
+    if (filteredStudents.length === 0) {
+      Alert.alert('Alert', 'There are no students to save to the file.');
+      return;
+    }
+    // console.log('filter::' + JSON.stringify(filteredStudents));
 
-    let csvContent = 'Student Name,Student ID,Day Check In ,Time Check In,Class,Subject,Teacher ID\n';
+    let csvContent = 'STT,Student Name,Student ID,Day Check In ,Time Check In,Class,Subject,Teacher Name\n';
     try {
+      let stt = 1;
       filteredStudents.forEach((student) => {
-        csvContent += `${student.name},${student.msv},${new Date(student.check_at.seconds * 1000).toLocaleString()},${
-          student.classes
-        },${student.subject},${student.teacher_id}\n`;
+        csvContent += `${stt},${student.name},${student.msv},${new Date(student.check_at.seconds * 1000).toLocaleString(
+          'vi-VN',
+        )},${student.classes},${student.subject},${authStore.user.name}\n`;
+        stt++;
       });
+      //,${student.teacher_id}Teacher ID,
       // console.log(csvContent);
       const fileUri =
-        FileSystem.documentDirectory + `${selectedClass}_${selectedSubject}` + '_' + new Date().getTime() + '.xlsx';
+        FileSystem.documentDirectory +
+        `${selectedClass}_${selectedSubject}` +
+        // '_' +
+        // new Date(startDate).getDate() +
+        // '_' +
+        // (new Date(startDate).getMonth() + 1) +
+        // '_' +
+        // new Date(startDate).getFullYear() +
+        // '_' +
+        // new Date(endDate).getDate() +
+        // '_' +
+        // (new Date(endDate).getMonth() + 1) +
+        // '_' +
+        // new Date(endDate).getFullYear() +
+        '_' +
+        new Date().getTime() +
+        '.xlsx';
       console.log(fileUri);
       await FileSystem.writeAsStringAsync(fileUri, csvContent, {
         encoding: FileSystem.EncodingType.UTF8,
@@ -110,36 +115,18 @@ const Search = (props) => {
   };
   // console.log(JSON.stringify(data));
 
-  // const handleSearch = () => {
-  //   if (selectedClass && selectedSubject && startDate && endDate) {
-  //     const filtered = scheduleStore.sce.filter((schedule) => {
-  //       return (
-  //         schedule.classes.name === selectedClass &&
-  //         schedule.subject.name === selectedSubject &&
-  //         schedule.checked_at.seconds * 1000 >= startDate.getTime() &&
-  //         schedule.checked_at.seconds * 1000 <= endDate.getTime()
-  //       );
-  //     });
-
-  //     const students = filtered.map((schedule) => {
-  //       return {
-  //         name: schedule.user.name,
-  //         msv: schedule.user.msv,
-  //         check_at: schedule.checked_at,
-  //         classes: schedule.classes.name,
-  //         subject: schedule.subject.name,
-  //         teacher_id: schedule.teacher_id,
-  //       };
-  //     });
-  //     console.log('stu:: ' + students);
-  //     setFilteredStudents(students);
-  //   } else {
-  //     // Handle case where one or more fields are missing
-  //     // You can show an alert or perform appropriate error handling
-  //   }
-  // };
   const handleSearch = () => {
     if (selectedClass && selectedSubject && startDate && endDate) {
+      const sevenDaysBeforeEndDate = endDate - 7 * 24 * 60 * 60 * 1000; // Calculate 7 days before the end date
+      if (startDate > endDate) {
+        Alert.alert('Alert', 'Start date cannot be after end date.', [
+          {
+            text: 'OK',
+            style: 'cancel',
+          },
+        ]);
+        return;
+      }
       const filtered = scheduleStore.sce.filter((schedule) => {
         const scheduleDate = schedule.checked_at.seconds * 1000;
         return (
@@ -158,12 +145,13 @@ const Search = (props) => {
         subject: schedule.subject.name,
         teacher_id: schedule.teacher_id,
       }));
-
+      // console.log('stu1:' + JSON.stringify(students));
       setFilteredStudents(students);
     } else {
       handleMissingFields();
     }
   };
+
   const handleMissingFields = () => {
     let errorMessage = '';
 
@@ -190,7 +178,7 @@ const Search = (props) => {
   };
 
   return (
-    <View>
+    <View style={{ flex: 1 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 40, right: 0 }}>
         <TouchableOpacity
           onPress={() => {
@@ -201,95 +189,104 @@ const Search = (props) => {
         >
           <IonIcon name="arrow-back" size={30} />
         </TouchableOpacity>
-        <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 0 }}>Attendance list by class and subject</Text>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: 0 }}>Attendance list</Text>
       </View>
-      <View style={styles.container}>
-        <RNPickerSelect
-          placeholder={{ label: 'Select a class', value: null }}
-          onValueChange={(value) => setSelectedClass(value)}
-          items={scheduleStore.classes.map((cls) => ({
-            label: cls.name,
-            value: cls.name,
-          }))}
-          style={pickerSelectStyles}
-        />
-        <RNPickerSelect
-          placeholder={{ label: 'Select a subject', value: null }}
-          onValueChange={(value) => setSelectedSubject(value)}
-          items={scheduleStore.subject.map((sub) => ({
-            label: sub.name,
-            value: sub.name,
-          }))}
-          style={pickerSelectStyles}
-        />
-        <View style={{ alignItems: 'center', justifyContent: 'space-around', flexDirection: 'row' }}>
-          <View style={{ marginRight: 0 }}>
-            <Text style={{ marginBottom: 5, fontWeight: 'bold' }}>From Date:</Text>
-            <TouchableOpacity onPress={showStartDatepicker} style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Icon source="calendar" size={24} color="black" style={{ marginRight: 5 }} />
-              <Text style={{ fontWeight: 'bold' }}>
-                {` ${new Date(startDate).getDate()}/${new Date(startDate).getMonth() + 1}/${new Date(
-                  startDate,
-                ).getFullYear()}`}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <View style={{ marginLeft: 0 }}>
-            <Text style={{ marginBottom: 5, fontWeight: 'bold' }}>To Date:</Text>
-            <TouchableOpacity onPress={showEndDatepicker} style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Icon source="calendar" size={24} color="black" style={{ marginRight: 5 }} />
-              <Text style={{ fontWeight: 'bold' }}>
-                {` ${new Date(endDate).getDate()}/${new Date(endDate).getMonth() + 1}/${new Date(
-                  endDate,
-                ).getFullYear()}`}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {showStartDatePicker && (
-            <DateTimePicker
-              value={new Date(startDate)}
-              mode="date"
-              is24Hour={true}
-              display="default"
-              onChange={handleStartDateChange}
-              dateFormat="day month year" // Hiển thị ngày tháng năm
-            />
-          )}
-          {showEndDatePicker && (
-            <DateTimePicker
-              value={new Date(endDate)}
-              mode="date"
-              is24Hour={true}
-              display="default"
-              onChange={handleEndDateChange}
-              dateFormat="day month year" // Hiển thị ngày tháng năm
-            />
-          )}
-        </View>
-
-        <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
-          <Text style={styles.buttonText}>Search</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={handleSaveToFile} style={styles.saveFile}>
-          <Text style={styles.buttonText}>Save to File</Text>
-        </TouchableOpacity>
-
-        <FlatList
-          data={filteredStudents}
-          renderItem={({ item }) => (
-            <View style={styles.studentItem}>
-              <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Name: {item.name}</Text>
-              <Text style={{ fontSize: 16, fontWeight: 'bold' }}>MSV: {item.msv}</Text>
+      <ScrollView>
+        <View style={styles.container}>
+          <RNPickerSelect
+            placeholder={{ label: 'Select a class', value: null }}
+            onValueChange={(value) => setSelectedClass(value)}
+            items={scheduleStore.classes.map((cls) => ({
+              label: cls.name,
+              value: cls.name,
+            }))}
+            style={pickerSelectStyles}
+          />
+          <RNPickerSelect
+            placeholder={{ label: 'Select a subject', value: null }}
+            onValueChange={(value) => setSelectedSubject(value)}
+            items={scheduleStore.subject.map((sub) => ({
+              label: sub.name,
+              value: sub.name,
+            }))}
+            style={pickerSelectStyles}
+          />
+          <View style={{ alignItems: 'center', justifyContent: 'space-evenly', flexDirection: 'row' }}>
+            <View style={{ marginRight: 0 }}>
+              <Text style={{ marginBottom: 5, fontWeight: 'bold' }}>From Date:</Text>
+              <TouchableOpacity onPress={showStartDatepicker} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Icon source="calendar" size={24} color="black" style={{ marginRight: 5 }} />
+                <Text style={{ fontWeight: 'bold' }}>
+                  {` ${new Date(startDate).getDate()}/${new Date(startDate).getMonth() + 1}/${new Date(
+                    startDate,
+                  ).getFullYear()}`}
+                </Text>
+              </TouchableOpacity>
             </View>
-          )}
-          keyExtractor={(item, index) => index.toString()}
-        />
-      </View>
+            <View style={{ marginLeft: 0 }}>
+              <Text style={{ marginBottom: 5, fontWeight: 'bold' }}>To Date:</Text>
+              <TouchableOpacity onPress={showEndDatepicker} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Icon source="calendar" size={24} color="black" style={{ marginRight: 5 }} />
+                <Text style={{ fontWeight: 'bold' }}>
+                  {` ${new Date(endDate).getDate()}/${new Date(endDate).getMonth() + 1}/${new Date(
+                    endDate,
+                  ).getFullYear()}`}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {showStartDatePicker && (
+              <DateTimePicker
+                value={new Date(startDate)}
+                mode="date"
+                is24Hour={true}
+                display="default"
+                onChange={handleStartDateChange}
+                dateFormat="day month year" // Hiển thị ngày tháng năm
+              />
+            )}
+            {showEndDatePicker && (
+              <DateTimePicker
+                value={new Date(endDate)}
+                mode="date"
+                is24Hour={true}
+                display="default"
+                onChange={handleEndDateChange}
+                dateFormat="day month year" // Hiển thị ngày tháng năm
+              />
+            )}
+          </View>
+
+          <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
+            <Text style={styles.buttonText}>Search</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={handleSaveToFile} style={styles.saveFile}>
+            <Text style={styles.buttonText}>Save to File</Text>
+          </TouchableOpacity>
+          <View>
+            <FlatList
+              data={filteredStudents}
+              renderItem={({ item }) => (
+                <View style={styles.studentItem}>
+                  <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Name: {item.name}</Text>
+                  <Text style={{ fontSize: 16, fontWeight: 'bold' }}>MSV: {item.msv}</Text>
+                  <Text style={{ fontSize: 16, fontWeight: 'bold' }}>
+                    Check_at: {new Date(item.check_at.seconds * 1000).toLocaleDateString('vi-VN')}
+                  </Text>
+                </View>
+              )}
+              keyExtractor={(item, index) => index.toString()}
+              // scrollEnabled={true}
+              style={{ flex: 1, height: 300 }}
+            />
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 };
+
 export default observer(Search);
 const styles = StyleSheet.create({
   container: {
@@ -320,6 +317,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
     paddingVertical: 10,
+    padding: 20,
   },
 });
 
@@ -335,8 +333,10 @@ const pickerSelectStyles = StyleSheet.create({
     paddingRight: 30,
     marginBottom: 10,
   },
+
   inputAndroid: {
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: 'bold',
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderWidth: 1,

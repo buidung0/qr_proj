@@ -1,29 +1,19 @@
 import { observer } from 'mobx-react';
 import { Alert, ScrollView, Text, TouchableOpacity, View, Dimensions } from 'react-native';
-import { useLayoutEffect, useRef, useState, useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import scheduleStore from '../store/ScheduleStore';
-import { Button, Icon, MD3Colors } from 'react-native-paper';
-import QRCode from 'react-native-qrcode-svg';
-import * as FileSystem from 'expo-file-system';
-import * as MediaLibrary from 'expo-media-library';
-import RNDateTimePicker from '@react-native-community/datetimepicker';
 import authStore from '../store/AuthStore';
-import RNPickerSelect from 'react-native-picker-select';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import React from 'react';
 import { Toast } from 'react-native-toast-message/lib/src/Toast';
 import { List } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
-import * as Sharing from 'expo-sharing';
 import { ROLES } from '../enum/role';
-import * as Location from 'expo-location';
 
 const CheckInByClass = (props) => {
   useLayoutEffect(() => {}, [scheduleStore.classes]);
-  // console.log(scheduleStore.classes)
-  //   console.log(cl.name + "(" + listStudentOfSubject.length + ")")
-  // console.log(listStudentOfSubject)
 
+  // console.log(scheduleStore.classes)
   const SC_W = Dimensions.get('window').width;
   const nav = useNavigation();
   useLayoutEffect(() => {

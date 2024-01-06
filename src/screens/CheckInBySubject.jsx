@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react';
 import { Alert, ScrollView, Text, TouchableOpacity, View, Dimensions } from 'react-native';
-import { useLayoutEffect, useRef, useState, useEffect } from 'react';
+import { useLayoutEffect} from 'react';
 import scheduleStore from '../store/ScheduleStore';
 import authStore from '../store/AuthStore';
 import IonIcon from 'react-native-vector-icons/Ionicons';
@@ -13,7 +13,6 @@ import { ROLES } from '../enum/role';
 const CheckInBySubject = (props) => {
   useLayoutEffect(() => {}, [scheduleStore.subject]);
   // console.log(scheduleStore.subject)
-
   const SC_W = Dimensions.get('window').width;
   const nav = useNavigation();
   useLayoutEffect(() => {
@@ -36,22 +35,22 @@ const CheckInBySubject = (props) => {
         justifyContent: 'center',
         alignItems: 'center',
         paddingVertical: 10,
-        paddingTop: 50,
+        paddingTop:40,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 2, right: 130 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingBottom: 0, right: 140 }}>
         <TouchableOpacity
           onPress={() => {
             nav.goBack();
           }}
           activeOpacity={0.7}
-          style={{ paddingLeft: 5, paddingRight: 15, marginLeft: 5 }}
+          style={{ paddingLeft: 0, paddingRight: 15, marginLeft: 0 }}
         >
           <IonIcon name="arrow-back" size={30} />
         </TouchableOpacity>
         <Text style={{ fontSize: 20, fontWeight: 'bold', marginLeft: -5 }}>Return</Text>
       </View>
-      <Text style={{ fontSize: 26, marginVertical: 20, marginLeft: 10 }}>Attendance list by subject</Text>
+      <Text style={{ fontSize: 26, marginVertical: 12, marginLeft: 0 }}>Attendance list by subject</Text>
       <ScrollView>
         {scheduleStore.subject.map((cl, index) => {
           const listStudentOfSubject = filterScheduleWithClass(cl.name, scheduleStore.schedules);

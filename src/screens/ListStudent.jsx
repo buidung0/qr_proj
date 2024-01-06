@@ -10,11 +10,11 @@ const ListStudent = (props) => {
   const nav = useNavigation();
   const [selectedClass, setSelectedClass] = useState(null);
   const [studentsByClass, setStudentsByClass] = useState({});
-  // console.log(scheduleStore.ubr)
   useLayoutEffect(() => {
     scheduleStore.getUseByRole();
   }, []);
   useLayoutEffect(() => {}, [scheduleStore.ubr]);
+  // console.log(scheduleStore.ubr)
   const data = scheduleStore.ubr;
 
   useEffect(() => {
